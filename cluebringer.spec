@@ -4,7 +4,7 @@
 
 %define version @PKG_VER_MAIN_CLEAN@
 %define release 1
-%define tarver %{version}
+%define tarver v%{version}
 
 Summary: Postfix Policy Daemon
 Name: cluebringer
