@@ -1,17 +1,17 @@
 # Quotas module
-# Copyright (C) 2009, AllWorldIT
+# Copyright (C) 2009-2014, AllWorldIT
 # Copyright (C) 2008, LinuxRulz
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -71,7 +71,7 @@ sub init {
 # Do our checks
 sub check {
 	my ($server,$sessionData) = @_;
-	
+
 
 	# If we not enabled, don't do anything
 	return CBP_SKIP if (!$config{'enable'});
@@ -127,7 +127,7 @@ sub check {
 				if (ref $quotas ne "ARRAY") {
 					return $server->protocol_response(PROTO_DB_ERROR);
 				}
-			
+
 				# Loop with quotas
 				foreach my $quota (@{$quotas}) {
 					# Exceeded limit
@@ -142,20 +142,20 @@ sub check {
 						$server->log(LOG_ERR,"[QUOTAS] No key found for quota ID '".$quota->{'ID'}."'");
 						return $server->protocol_response(PROTO_DATA_ERROR);
 					}
-	
+
 					# Get limits
 					my $limits = getLimits($server,$quota->{'ID'});
 					# Check if we got limits or err
 					if (ref $limits ne "ARRAY") {
 						return $server->protocol_response(PROTO_DB_ERROR);
 					}
-	
+
 					# Loop with limits
 					foreach my $limit (@{$limits}) {
-	
+
 						# Get quota tracking info
 						my $qtrack = getTrackingInfo($server,$limit->{'ID'},$key);
-	
+
 						# Check if we got tracking info or not
 						if (defined($qtrack) && ref $qtrack ne "HASH") {
 							return $server->protocol_response(PROTO_DB_ERROR);
@@ -165,12 +165,12 @@ sub check {
 							my $elapsedTime = defined($qtrack->{'LastUpdate'}) ? ( $now - $qtrack->{'LastUpdate'} ) : $quota->{'Period'};
 							# If elapsed time is less than zero, its time diff between servers, meaning no time has elapsed
 							$elapsedTime = 0 if ($elapsedTime < 0);
-							
+
 							# Check if elapsedTime is longer than period, or negative (time diff between servers?)
 							my $currentCounter;
 							if ($elapsedTime > $quota->{'Period'}) {
 								$currentCounter = 0;
-	
+
 							# Calculate the % of the period we have, and multiply it with the counter ... this should give us a reasonably
 							# accurate counting
 							} else {
@@ -193,7 +193,7 @@ sub check {
 								}
 								# Bump up limit
 								$newCounters{$qtrack->{'QuotasLimitsID'}}++;
-	
+
 							# Check for cumulative size violation
 							} elsif ($limitType eq "messagecumulativesize") {
 								# Check for violation
@@ -201,25 +201,25 @@ sub check {
 									$hasExceeded = "Policy rejection; Cumulative message size quota exceeded";
 								}
 							}
-	
+
 						} else {
 							$qtrack->{'QuotasLimitsID'} = $limit->{'ID'};
 							$qtrack->{'TrackKey'} = $key;
 							$qtrack->{'Counter'} = 0;
 							$qtrack->{'LastUpdate'} = $now;
-								
+
 							# Work out the difference to the DB value, we ONLY DO THIS ONCE!!! so if its defined, leave it alone!
 							if (!defined($newCounters{$qtrack->{'QuotasLimitsID'}})) {
 								$newCounters{$qtrack->{'QuotasLimitsID'}} = $qtrack->{'Counter'};
 							}
-							
+
 							# Check if this is a message counter
 							if (lc($limit->{'Type'}) eq "messagecount") {
 								# Bump up limit
 								$newCounters{$qtrack->{'QuotasLimitsID'}}++;
 							}
 						}
-						
+
 						# Setup some stuff we need for logging
 						$qtrack->{'DBKey'} = $key;
 						$qtrack->{'CounterLimit'} = $limit->{'CounterLimit'};
@@ -237,7 +237,7 @@ sub check {
 
 						# Save quota tracking info
 						push(@trackingList,$qtrack);
-	
+
 					}  # foreach my $limit (@{$limits})
 				} # foreach my $policyID (@{$sessionData->{'Policy'}->{$priority}})
 			} # foreach my $quota (@{$quotas})
@@ -248,13 +248,13 @@ sub check {
 
 			# Loop with tracking ID's and update
 			foreach my $qtrack (@trackingList) {
-					
+
 				# Percent used
 				my $pused =  sprintf('%.1f', ( ($newCounters{$qtrack->{'QuotasLimitsID'}} + $qtrack->{'Counter'}) / $qtrack->{'CounterLimit'} ) * 100);
 
 				# Update database
 				my $sth = DBDo("
-					UPDATE 
+					UPDATE
 						quotas_tracking
 					SET
 						Counter = Counter + ".DBQuote($newCounters{$qtrack->{'QuotasLimitsID'}}).",
@@ -267,7 +267,7 @@ sub check {
 					$server->log(LOG_ERR,"[QUOTAS] Failed to update quota_tracking item: ".cbp::dblayer::Error());
 					return $server->protocol_response(PROTO_DB_ERROR);
 				}
-				
+
 				# If nothing updated, then insert our record
 				if ($sth eq "0E0") {
 					# Insert into database
@@ -286,7 +286,7 @@ sub check {
 						$server->log(LOG_ERR,"[QUOTAS] Failed to insert quota_tracking item: ".cbp::dblayer::Error());
 						return $server->protocol_response(PROTO_DB_ERROR);
 					}
-					
+
 					# Log create to mail log
 					$server->maillog("module=Quotas, mode=create, host=%s, helo=%s, from=%s, to=%s, reason=quota_create, policy=%s, quota=%s, limit=%s, "
 								."track=%s, counter=%s, quota=%s/%s (%s%%)",
@@ -323,7 +323,7 @@ sub check {
 							$pused);
 
 				}
-					
+
 
 				# Remove limit
 				delete($newCounters{$qtrack->{'QuotasLimitsID'}});
@@ -385,24 +385,24 @@ sub check {
 
 						# HACK: Fool getKey into thinking we actually do have a recipient
 						$sessionData->{'Recipient'} = $emailAddy;
-	
+
 						# Grab tracking keys
 						my $key = getKey($server,$quota,$sessionData);
 						if (!defined($key)) {
 							$server->log(LOG_WARN,"[QUOTAS] No key found for quota ID '".$quota->{'ID'}."'");
 							return $server->protocol_response(PROTO_DATA_ERROR);
 						}
-	
+
 						# Get limits
 						my $limits = getLimits($server,$quota->{'ID'});
 						# Check if we got limits or err
 						if (ref $limits ne "ARRAY") {
 							return $server->protocol_response(PROTO_DB_ERROR);
 						}
-	
+
 						# Loop with limits
 						foreach my $limit (@{$limits}) {
-	
+
 							# Get quota tracking info
 							my $qtrack = getTrackingInfo($server,$limit->{'ID'},$key);
 							# Check if we got tracking info or not
@@ -414,10 +414,10 @@ sub check {
 							if (lc($limit->{'Type'}) eq "messagecumulativesize") {
 								# Bump up counter
 								my $currentCounter = $qtrack->{'Counter'} + $sessionData->{'Size'};
-								
+
 								# Update database
 								my $sth = DBDo("
-									UPDATE 
+									UPDATE
 										quotas_tracking
 									SET
 										Counter = Counter + ".DBQuote($sessionData->{'Size'}).",
@@ -456,9 +456,9 @@ sub check {
 			} # foreach my $priority (sort {$a <=> $b} keys %{$sessionData->{'_Recipient_To_Policy'}{$emailAddy}})
 		} # foreach my $emailAddy (keys %{$sessionData->{'_Recipient_To_Policy'}})
 
-			
+
 	}
-	
+
 	# Setup result
 	if (!defined($verdict)) {
 		return CBP_CONTINUE;
@@ -598,7 +598,7 @@ sub getKey
 
 	# Split off method and splec
 	my ($method,$spec) = ($quota->{'Track'} =~ /^([^:]+)(?::(\S+))?/);
-	
+
 	# Lowercase method & spec
 	$method = lc($method);
 	$spec = lc($spec) if (defined($spec));
@@ -644,14 +644,14 @@ sub getKey
 	# Check TrackRecipient
 	} elsif ($method eq "recipient") {
 		my $key = getEmailKey($spec,$sessionData->{'Recipient'});
-	
+
 		# Check for no key
 		if (defined($key)) {
 			$res = "Recipient:$key";
 		} else {
 			$server->log(LOG_WARN,"[QUOTAS] Unknown key specification in TrackRecipient");
 		}
-	
+
 	# Fall-through to catch invalid specs
 	} else {
 		$server->log(LOG_WARN,"[QUOTAS] Invalid tracking specification '".$quota->{'Track'}."'");
@@ -666,11 +666,11 @@ sub getKey
 sub getTrackingInfo
 {
 	my ($server,$quotaID,$key) = @_;
-	
-	
+
+
 	# Query quota info
 	my $sth = DBSelect("
-		SELECT 
+		SELECT
 			QuotasLimitsID,
 			TrackKey, Counter, LastUpdate
 		FROM
@@ -683,7 +683,7 @@ sub getTrackingInfo
 		$server->log(LOG_ERR,"[QUOTAS] Failed to query quotas_tracking: ".cbp::dblayer::Error());
 		return -1;
 	}
-	my $row = hashifyLCtoMC($sth->fetchrow_hashref(),qw( QuotasLimitsID TrackKey Counter LastUpdate )); 
+	my $row = hashifyLCtoMC($sth->fetchrow_hashref(),qw( QuotasLimitsID TrackKey Counter LastUpdate ));
 	DBFreeRes($sth);
 
 	# Make sure Counter isn't 0
@@ -702,7 +702,7 @@ sub getLimits
 
 	# Query quota info
 	my $sth = DBSelect("
-		SELECT 
+		SELECT
 			ID,
 			Type, CounterLimit
 		FROM
@@ -734,7 +734,7 @@ sub cleanup
 
 	# Remove old tracking info from database
 	my $sth = DBDo("
-		DELETE FROM 
+		DELETE FROM
 			quotas_tracking
 		WHERE
 			LastUpdate < ".DBQuote($lastMonth)."
