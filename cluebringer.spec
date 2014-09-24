@@ -123,7 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %attr(-,root,apache) %config(noreplace) %{_sysconfdir}/policyd-cluebringer/webui.conf
 
-%config(noreplace) %{apacheconfdir}/cluebringer.conf
+%config(noreplace) %{apacheconfdir}/policyd-cluebringer.conf
 
 
 %changelog
