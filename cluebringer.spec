@@ -125,6 +125,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %config(noreplace) %{apacheconfdir}/policyd-cluebringer.conf
 
+%dir %{_localstatedir}/log/policyd-cluebringer
 
 %changelog
 
