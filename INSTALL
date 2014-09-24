@@ -5,7 +5,7 @@ Installing PolicyD v2.
 * Requirements for PolicyD v2
 *
 
-Note: For CentOS you will need to use RPMForge repositories.
+Note: For CentOS you will need to use RPMForge & EPEL repositories.
 
 - MySQL or PostgreSQL or SQLite
 - Net::Server >= 0.96
