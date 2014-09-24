@@ -1,17 +1,17 @@
 # Cluebringer policy support for amavisd-new
-# Copyright (C) 2009, AllWorldIT
+# Copyright (C) 2009-2014, AllWorldIT
 # Copyright (C) 2008, LinuxRulz
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -20,7 +20,8 @@
 package Amavis::Custom;
 use strict;
 
-use lib('/usr/local/lib/policyd-2.0','/usr/lib/policyd-2.0');
+
+use lib('/usr/local/lib/policyd-cluebringer-2.0','/usr/lib/policyd-cluebringer-2.0','/usr/lib64/policyd-cluebringer-2.0');
 
 
 my $DB_dsn = "DBI:SQLite:dbname=/tmp/cluebringer.sqlite";
@@ -36,7 +37,7 @@ my %ruleOptions = (
 			bypass_banned_checks
 			bypass_spam_checks
 			bypass_header_checks
-			
+
 			spam_modifies_subject
 	) ],
 
@@ -53,12 +54,12 @@ my %ruleOptions = (
 			spam_tag_subject
 			spam_tag2_subject
 			spam_tag3_subject
-			
+
 			quarantine_virus
 			quarantine_banned_file
 			quarantine_bad_header
 			quarantine_spam
-			
+
 			bcc_to
 	) ],
 
@@ -112,7 +113,7 @@ sub new {
 	$self->{'inifile'}{'database'}{'username'} = $DB_user;
 	$self->{'inifile'}{'database'}{'password'} = $DB_pass;
 	cbp::config::Init($self);
-	
+
 	# Init system stuff
 	$self->{'dbh'} = cbp::dbilayer::Init($self);
 	if (!defined($self->{'dbh'})) {
@@ -136,7 +137,7 @@ sub process_policy {
 	my($self,$conn,$msginfo,$pbn) = @_;
 
 	do_log(5,"policyd/process_policy: Starting");
-	
+
 	# Get message ID
 	my (undef,undef,$lastReceived) = $msginfo->get_header_field('received',0);
 	if (!($lastReceived =~ /with E?SMTPS?A? id ([0-9A-Z]+)/)) {
@@ -186,7 +187,7 @@ sub process_policy {
 	# Loop with email addies
 	foreach my $emailAddy (keys %recip_to_policy) {
 
-		 # Start with a blank config
+		# Start with a blank config
 		my %amavisConfig = ();
 
 		# Loop with priorities, low to high
@@ -494,7 +495,7 @@ sub process_policy {
 
 
 		# Whitelist & blacklist
-		
+
 		# Check if we have a list of sender whitelists
 		if (defined($amavisConfig{'sender_whitelist'})) {
 			# If the lookup tables isn't a hash ref, make one
@@ -518,7 +519,7 @@ sub process_policy {
 			# Save...
 			$pbn->{'per_recip_whitelist_sender_lookup_tables'}{$emailAddy} = \@vals;
 		}
-		
+
 		# Check if we have a list of sender blacklists
 		if (defined($amavisConfig{'sender_blacklist'})) {
 			# If the lookup tables isn't a hash ref, make one
@@ -545,35 +546,35 @@ sub process_policy {
 
 
 		# Admin notifications
-		
+
 		# Check if we have a list of new virus admins
 		if (defined($amavisConfig{'notify_admin_newvirus'})) {
 			push(@{$pbn->{'newvirus_admin_maps'}},\{
 					$emailAddy	=> $amavisConfig{'notify_admin_newvirus'}
 			});
 		}
-		
+
 		# Check if we have a list of virus admins
 		if (defined($amavisConfig{'notify_admin_virus'})) {
 			push(@{$pbn->{'virus_admin_maps'}},\{
 					$emailAddy	=> $amavisConfig{'notify_admin_virus'}
 			});
 		}
-		
+
 		# Check if we have a list of spam admins
 		if (defined($amavisConfig{'notify_admin_spam'})) {
 			push(@{$pbn->{'spam_admin_maps'}},\{
 					$emailAddy	=> $amavisConfig{'notify_admin_spam'}
 			});
 		}
-		
+
 		# Check if we have a list of banned file admins
 		if (defined($amavisConfig{'notify_admin_banned_file'})) {
 			push(@{$pbn->{'banned_admin_maps'}},\{
 					$emailAddy	=> $amavisConfig{'notify_admin_banned_file'}
 			});
 		}
-		
+
 		# Check if we have a list of bad header admins
 		if (defined($amavisConfig{'notify_admin_bad_header'})) {
 			push(@{$pbn->{'bad_header_admin_maps'}},\{
@@ -583,7 +584,7 @@ sub process_policy {
 
 
 		# Quarantine options
-		
+
 		# Check if we must quarantine a virus
 		if (defined($amavisConfig{'quarantine_virus'})) {
 			push(@{$pbn->{'virus_quarantine_to_maps'}},\{
@@ -613,7 +614,7 @@ sub process_policy {
 		}
 
 		# Interception
-		
+
 		# Email addy to BCC to
 		if (defined($amavisConfig{'bcc_to'})) {
 			if (!defined($pbn->{'always_bcc'}) || $pbn->{'always_bcc'} eq "") {
@@ -633,7 +634,7 @@ sub process_policy {
 sub amail_done
 {
 	my($self,$conn,$msginfo) = @_;
-  
+
 	my($mail_id) = $msginfo->mail_id;
 	my($spam_level) = $msginfo->spam_level;
 	my($sid) = $msginfo->sender_maddr_id;
@@ -672,10 +673,10 @@ sub getAmavisRule
 {
 	my ($self,$policyID) = @_;
 
-	
+
 	# Query amavis rules table
 	my $sth = DBSelect("
-		SELECT 
+		SELECT
 			ID,
 
 			bypass_virus_checks, bypass_banned_checks, bypass_spam_checks, bypass_header_checks,
@@ -698,11 +699,11 @@ sub getAmavisRule
 
 			notify_admin_newvirus, notify_admin_virus, notify_admin_spam, notify_admin_banned_file, notify_admin_bad_header,
 			notify_admin_newvirus_m, notify_admin_virus_m, notify_admin_spam_m, notify_admin_banned_file_m, notify_admin_bad_header_m,
-		
+
 
 			quarantine_virus, quarantine_banned_file, quarantine_bad_header, quarantine_spam,
 			quarantine_virus_m, quarantine_banned_file_m, quarantine_bad_header_m, quarantine_spam_m,
-			
+
 			bcc_to,
 			bcc_to_m
 
@@ -736,7 +737,7 @@ sub log
 	my ($self,$level,$msg,@args) = @_;
 
 	# Check log level and set text
-	my $logtxt = "UNKNOWN"; 
+	my $logtxt = "UNKNOWN";
 	my $loglvl = 1;
 	# Check levels...
 	if ($level == LOG_DEBUG) {
@@ -754,7 +755,7 @@ sub log
 	} elsif ($level == LOG_ERR) {
 		$logtxt = "ERROR";
 		$loglvl = -2;
-	} 
+	}
 
 	# Parse message nicely
 	if ($msg =~ /^(\[[^\]]+\]) (.*)/s) {

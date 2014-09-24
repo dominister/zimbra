@@ -1,3 +1,18 @@
+Updating from < 2.0.15 to 2.0.15+
+--------------------------------------------------------------
+The location of the configuration file /etc/cluebringer.conf has changed to
+/etc/policyd-cluebringer/cluebringer.conf .
+
+The library locations have also changed from */policyd-2.0 to
+*/policyd-cluebringer-2.0 .
+
+The pid file location hs changed from /var/run/cbpolicyd.pid to
+/var/run/policyd-cluebringer/cbpolicyd.pid .
+
+The log file location hs changed from /var/log/cbpolicyd.log to
+/var/log/policyd-cluebringer/cbpolicyd.log .
+
+
 Updating database from < 2.0.12 to 2.0.12+
 --------------------------------------------------------------
 

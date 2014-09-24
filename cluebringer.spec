@@ -1,24 +1,24 @@
 %define apacheconfdir %{_sysconfdir}/httpd/conf.d
 # this path is hardcoded
-%define cblibdir %{_libdir}/policyd-2.0
+%define cblibdir %{_libdir}/policyd-cluebringer-2.0
 
 %define version @PKG_VER_MAIN_CLEAN@
 %define release 1
-%define tarver v%{version}
 
-Summary: Postfix Policy Daemon
-Name: cluebringer
+Summary: Email server policy daemon
+Name: policyd-cluebringer
 Version: %{version}
 Release: %{release}
 License: GPLv2
 Group: System/Daemons
 URL: http://www.policyd.org
-Source0: http://downloads.sourceforge.net/policyd/%{name}-%{tarver}.tar.bz2
+Source0: http://downloads.policyd.org/%{version}/%{name}-%{version}.tar.bz2
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: noarch
 
-Provides: cbpolicyd
+Provides: cbpolicyd = %{version}
+Obsoletes: cbpolicyd
 
 Provides: policyd = %{version}
 Obsoletes: policyd
@@ -39,7 +39,7 @@ hosting industry.
 
 
 %prep
-%setup -q -n %{name}-%{tarver}
+%setup -q -n %{name}-%{version}
 
 # hack to prevent rpmbuild from automatically detecting "requirements" that
 # aren't actually external requirements.  See https://fedoraproject.org/wiki/Packaging/Perl#In_.25prep_.28preferred.29
@@ -48,7 +48,7 @@ cat << EOF > %{name}-req
 %{__perl_requires} $* | sed -e '/perl(cbp::/d'
 EOF
 
-%define __perl_requires %{_builddir}/%{name}-%{tarver}/%{name}-req
+%define __perl_requires %{_builddir}/%{name}-%{version}/%{name}-req
 chmod +x %{__perl_requires}
 
 
@@ -74,21 +74,22 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{cblibdir}
 mkdir -p $RPM_BUILD_ROOT%{_sbindir}
 mkdir -p $RPM_BUILD_ROOT%{_initrddir}
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/policyd
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/log/policyd-cluebringer
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/policyd-cluebringer
 cp -R cbp $RPM_BUILD_ROOT%{cblibdir}
-install -m 755 cbpolicyd cbpadmin database/convert-tsql $RPM_BUILD_ROOT%{_sbindir}
-install -m 644 cluebringer.conf $RPM_BUILD_ROOT%{_sysconfdir}/policyd/cluebringer.conf
+install -m 755 cbpolicyd cbpadmin $RPM_BUILD_ROOT%{_sbindir}
+install -m 644 cluebringer.conf $RPM_BUILD_ROOT%{_sysconfdir}/policyd-cluebringer/cluebringer.conf
 install -m 755 contrib/initscripts/Fedora/cbpolicyd $RPM_BUILD_ROOT%{_initrddir}
 
 # Webui
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/%{name}/webui
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/policyd-cluebringer/webui
 mkdir -p $RPM_BUILD_ROOT%{apacheconfdir}
-cp -R webui/* $RPM_BUILD_ROOT%{_datadir}/%{name}/webui/
-install -m 644 contrib/httpd/cluebringer-httpd.conf $RPM_BUILD_ROOT%{apacheconfdir}/cluebringer.conf
+cp -R webui/* $RPM_BUILD_ROOT%{_datadir}/policyd-cluebringer/webui/
+install -m 644 contrib/httpd/cluebringer-httpd.conf $RPM_BUILD_ROOT%{apacheconfdir}/policyd-cluebringer.conf
 # Move config into /etc
-mv $RPM_BUILD_ROOT%{_datadir}/%{name}/webui/includes/config.php $RPM_BUILD_ROOT%{_sysconfdir}/policyd/webui.conf
-ln -s %{_sysconfdir}/policyd/webui.conf $RPM_BUILD_ROOT%{_datadir}/%{name}/webui/includes/config.php
-chmod 0640 $RPM_BUILD_ROOT%{_sysconfdir}/policyd/webui.conf
+mv $RPM_BUILD_ROOT%{_datadir}/policyd-cluebringer/webui/includes/config.php $RPM_BUILD_ROOT%{_sysconfdir}/policyd-cluebringer/webui.conf
+ln -s %{_sysconfdir}/policyd-cluebringer/webui.conf $RPM_BUILD_ROOT%{_datadir}/policyd-cluebringer/webui/includes/config.php
+chmod 0640 $RPM_BUILD_ROOT%{_sysconfdir}/policyd-cluebringer/webui.conf
 
 # Docdir
 mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}/contrib
@@ -112,16 +113,15 @@ rm -rf $RPM_BUILD_ROOT
 %{cblibdir}/
 %{_sbindir}/cbpolicyd
 %{_sbindir}/cbpadmin
-%{_sbindir}/convert-tsql
 %{_initrddir}/cbpolicyd
 
-%dir %{_datadir}/%{name}
-%attr(-,root,apache) %{_datadir}/%{name}/webui/
+%dir %{_datadir}/policyd-cluebringer
+%attr(-,root,apache) %{_datadir}/policyd-cluebringer/webui/
 
-%dir %{_sysconfdir}/policyd
-%config(noreplace) %{_sysconfdir}/policyd/cluebringer.conf
+%dir %{_sysconfdir}/policyd-cluebringer
+%config(noreplace) %{_sysconfdir}/policyd-cluebringer/cluebringer.conf
 
-%attr(-,root,apache) %config(noreplace) %{_sysconfdir}/policyd/webui.conf
+%attr(-,root,apache) %config(noreplace) %{_sysconfdir}/policyd-cluebringer/webui.conf
 
 %config(noreplace) %{apacheconfdir}/cluebringer.conf
 

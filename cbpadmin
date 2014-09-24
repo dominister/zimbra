@@ -22,7 +22,7 @@ use strict;
 use warnings;
 
 
-use lib('/usr/local/lib/policyd-2.0','/usr/lib/policyd-2.0');
+use lib('/usr/local/lib/policyd-cluebringer-2.0','/usr/lib/policyd-cluebringer-2.0','/usr/lib64/policyd-cluebringer-2.0');
 
 use Config::IniFiles;
 use Getopt::Long;
@@ -52,7 +52,7 @@ if ($opts{'help'}) {
 
 # Set defaults
 my $cfg;
-$cfg->{'config_file'} = "/etc/cluebringer.conf";
+$cfg->{'config_file'} = "/etc/policyd-cluebringer/cluebringer.conf";
 
 # Check if we must override
 if (defined($opts{'config'}) && $opts{'config'} ne "") {
