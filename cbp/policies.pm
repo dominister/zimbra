@@ -1,5 +1,5 @@
 # Policy handling functions
-# Copyright (C) 2009-2015, AllWorldIT
+# Copyright (C) 2009-2017, AllWorldIT
 # Copyright (C) 2008, LinuxRulz
 #
 # This program is free software; you can redistribute it and/or modify
@@ -100,7 +100,7 @@ sub getPolicy
 	# Process the Members
 	foreach my $policyMember (@{$policyMembers}) {
 		# Make debugging a bit easier
-		my $debugTxt = sprintf('[ID:%s/Name:%s]',$policyMember->{'ID'},$policyMember->{'Name'});
+		my $debugTxt = sprintf('[PolicyID:%s/MemberID:%s/Priority:%s/Name:%s]',$policyMember->{'PolicyID'},$policyMember->{'ID'},$policyMember->{'Priority'},$policyMember->{'Name'});
 
 		#
 		# Source Test
@@ -184,6 +184,7 @@ sub getPolicy
 		next if (!$destinationMatch);
 
 		$matchedPolicies->{$policyMember->{'Priority'}}->{$policyMember->{'PolicyID'}} = 1;
+		last;
 	}
 
 	# Work through the list and build our result, which is a priority hash with matches as an array
@@ -226,6 +227,7 @@ sub getPolicyMembers
 			@TP@policies.Disabled = 0
 			AND @TP@policy_members.Disabled = 0
 			AND @TP@policy_members.PolicyID = @TP@policies.ID
+		ORDER BY @TP@policies.Priority ASC
 	');
 	if (!$sth) {
 		$server->log(LOG_DEBUG,"[POLICIES] Error while selecing policy members from database: ".
@@ -238,14 +240,14 @@ sub getPolicyMembers
 	while (my $row = hashifyLCtoMC($sth->fetchrow_hashref(),
 			qw( Name Priority PolicyDisabled ID PolicyID Source Destination MemberDisabled )
 	)) {
-
 		# Log what we see
+		my $debugTxt = sprintf('[PolicyID:%s/MemberID:%s/Priority:%s/Name:%s]',$row->{'PolicyID'},$row->{'ID'},$row->{'Priority'},$row->{'Name'});
 		if ($row->{'PolicyDisabled'} eq "1") {
-			$server->log(LOG_DEBUG,"[POLICIES] Policy '".$row->{'Name'}."' is disabled") if ($log);
+			$server->log(LOG_DEBUG,"[POLICIES] $debugTxt: getPolicyMembers - Policy disabled, policy member not returned") if ($log);
 		} elsif ($row->{'MemberDisabled'} eq "1") {
-			$server->log(LOG_DEBUG,"[POLICIES] Policy member item with ID '".$row->{'ID'}."' is disabled") if ($log);
+			$server->log(LOG_DEBUG,"[POLICIES] $debugTxt: getPOlicyMembers - Policy member disabled, policy member not returned") if ($log);
 		} else {
-			$server->log(LOG_DEBUG,"[POLICIES] Found policy member with ID '".$row->{'ID'}."' in policy '".$row->{'Name'}."'") if ($log);
+			$server->log(LOG_DEBUG,"[POLICIES] $debugTxt: getPolicyMembers - Policy member returned") if ($log);
 			push(@policyMembers, $row);
 		}
 	}
