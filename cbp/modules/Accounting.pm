@@ -809,7 +809,7 @@ sub getTrackingInfo
 #	if (!$sth) {
 #		$server->log(LOG_ERR,"[ACCOUNTING] Failed to remove old accounting tracking records: ".awitpt::db::dblayer::Error());
 #	}
-#	$server->log(LOG_INFO,"[ACCOUNTING] Removed ".( $sth ne "0E0" ? $sth : 0).." records from tracking table");
+#	$server->log(LOG_INFO,"[ACCOUNTING] Removed ".( $sth ne "0E0" ? $sth : 0)." records from tracking table");
 #}
 
 
